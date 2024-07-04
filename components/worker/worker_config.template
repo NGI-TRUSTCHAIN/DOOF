@@ -1,0 +1,36 @@
+{ 
+  "inputProvider" : {
+    "path": "/home/ecosteer/ngi/doof/provider/python/presentation/input/rabbitmq/pres_input_rabbitqueue.py",
+    "class": "inputRabbitQueue",
+    "configuration": "url=amqp://guest:guest@127.0.0.1:5672/;queue_name=imperatives;rc=10;rd=10;dm=1;"
+  },
+
+  "outputProvider": {
+    "path":   "/home/ecosteer/ngi/doof/provider/python/presentation/output/mqtt/pres_output_mqtt.py",
+    "class": "outputMqttPaho",
+    "configuration": "h=127.0.0.1;p=1883;t=events;rc=10;ka=60;q=1;tout=15;prf=grz_"
+  },  
+
+  "macros":{
+    "AUTH_MACRO":[
+      {
+        "path": "/home/ecosteer/ngi/doof/provider/python/processor/pipeline/authentication_check.py",
+        "class": "AuthenticationCheckProcessor",
+        "configuration":"" 
+      }
+    ],
+  },
+  "pipelines" : {
+    "start_session":{
+      "main": 
+        [{
+          "path":"/home/ecosteer/ngi/doof/provider/python/processor/start_session_processor.py",
+          "class": "StartSessionProcessor",
+          "configuration": ""
+        }], 
+      "finally": 
+        [
+        ]
+    },
+}
+}
