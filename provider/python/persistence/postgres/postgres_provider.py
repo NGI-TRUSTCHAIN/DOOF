@@ -1102,7 +1102,17 @@ class dbProviderPostgres(providerPersistence):
         product = products[0]
         return product, err
 
+    
+    def get_product_data_origin(self, id) \
+        -> Tuple[dict, DopError]:
+        query = f"""
+            SELECT data_origin_id FROM {Product.table_name()}
+        """
+        
+        data_origin, err = self._sql_select(query, where={"id": id})
 
+        return data_origin,err
+    
 
     def get_property(self, where: dict = None) \
             -> Tuple[Union[Property, list, None], DopError]:
