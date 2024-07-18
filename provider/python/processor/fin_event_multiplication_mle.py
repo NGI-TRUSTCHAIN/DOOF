@@ -10,7 +10,6 @@ import secrets
 from provider.python.processor.finally_processor_provider import FinallyProcessorProvider
 from common.python.error import DopError
 from common.python.event import DopEvent, TransportEventHeader, DopEventPayload, DopEventHeader
-from common.python.processor_env import ProcessorEnvs
 
 from common.python.pipeline_memory import PipelineMemory
 
