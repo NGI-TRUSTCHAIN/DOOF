@@ -59,7 +59,7 @@ def load_processor(proc_entry: dict) -> Tuple[DopError, object]:
 
 def load_macro_base_case(loaded_macros: dict, macro_name: str, macro_list: list) -> list:
     """
-    base case: macro is list of dictionaries
+    macro is list of dictionaries
     
     INPUT: 
         [{
