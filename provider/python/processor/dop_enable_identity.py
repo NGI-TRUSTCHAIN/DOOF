@@ -1,31 +1,33 @@
 #   SPDX-License-Identifier: Apache-2.0
 
-#   © Copyright Ecosteer 2024
 #   version:    1.0
-#   author:     Georgiana
-#   date:       24/01/2024
+#   author:     georgiana
+#   date:       01/07/2024 
+
 
 from typing import Tuple, List
-
+import json
 
 from provider.python.processor.provider_processor import ProcessorProvider 
 from common.python.error import DopError, LogSeverity
 from common.python.event import DopEvent, DopEventHeader, DopEventPayload
 from common.python.model.models import User, Transaction
+from common.python.model.schemas import UserSchema
 from common.python.new_processor_env import ProcessorEnvs
+
 
 from common.python.utils import DopUtils
 
 
 class DopEnableIdentityProcessor(ProcessorProvider):
-   
+    
 
     def __init__(self): 
         super().__init__()
         self._config = ""
         self._airdrop = 999
         self._owner_address = ""
-        self._owner_pwd = "ecosteer"        # secret, no proxy_secret 
+        self._owner_pwd = ""            # secret, no proxy_secret 
         self._event_type = "dop_enable_identity"
 
     def init(self, config: str) -> DopError:
@@ -95,38 +97,22 @@ class DopEnableIdentityProcessor(ProcessorProvider):
 
         blk = envs.blk_provider
         db = envs.db_provider
-        logger = envs.logger_provider 
-        phase = 1 
+        phase = 0
 
         header = event.header
         payload = event.payload.to_dict()
         
 
-        session = header.session
-        task = header.task
-
-        token = payload.get('auth_token')
-
-        user, perr = db.get_user_from_session({
-            'value': header.session,
-            'token': token
-        })
-        if perr.isError():
-            # Checks on auth_token: the session must belong to an enabled user (the admin in this case);
-            # this check was done by auth macro; now there may have been a provider - infrastructural error    
+        # get authenticated user from stack 
+        try:
+            user = envs.data.get(User.__name__)[0]
+        except:
+            #perr =  DopError(999, "missing data from pipeline data stack")
             err = DopUtils.create_dop_error(DopUtils.ERR_PL_USER_NOT_FOUND)
-            err.perr = perr
+            #err.perr = perr 
             return err
 
-        
-        if user is None: 
-            envs.events.push(header.event, DopEvent(header, DopEventPayload({
-                    "err" : DopUtils.ERR_PL_USER_NOT_FOUND['id'],
-                    #"msg": DopUtils.ERR_PL_USER_NOT_FOUND['msg'],
-                    "phase": phase
-            })))
-            return DopError()
-    
+     
 
         if not user.is_admin:
             event_payload = DopEventPayload({
@@ -137,9 +123,12 @@ class DopEnableIdentityProcessor(ProcessorProvider):
             envs.events.push(header.event, DopEvent(header, event_payload))
             return DopError()
 
+        # Data from payload
 
         subject = payload.get('subject')
         screen_name = payload.get('screen_name', subject)
+        # generate a unique id for the user; overwrite it if user exists
+        _id = str(DopUtils.create_uuid())
 
         # check if new user exists already
         db_user, perr = db.get_user_from_username(subject)
@@ -156,52 +145,64 @@ class DopEnableIdentityProcessor(ProcessorProvider):
         update = False
         if db_user is not None and db_user.blk_address is None :
                 #and db_user.is_admin: 
+            _id = db_user.id
             update = True
             # admin provisioning itself or a user that was inserted manually in db
-        
 
-        blk_passw = DopUtils.make_random_password()    
-        address, blk_passw, perr = blk.create_user(subject, blk_passw)
+
+        blk_passw = DopUtils.make_random_password()  
+        # NOTE address is computed here, but it will only be available when
+        # the transaction will be completed 
+        perr, address = blk.marketplaceAddress(_id)
         if perr.isError():
             err = DopUtils.create_dop_error(DopUtils.ERR_IP_SIGNUP)
             err.perr = perr
             return err
         
         
-        if update: 
-            update_user = User(
-                id = db_user.id,
+        # TODO: extend account table to save 'secret' as well; blk_passw is used as proxy_secret 
+        # ATTENTION: no two users can have the same 'subject' - so use a uuid instead 
+        # as parameter to the blk provider call
+        perr, tid = blk.memberCreate(_id, "secret", blk_passw) 
+
+        if perr.isError():
+            err = DopUtils.create_dop_error(DopUtils.ERR_IP_SIGNUP)
+            err.perr = perr
+            return err
+        
+
+        
+        #logger.debug("New externally owned account created with address {}".format(address))
+       
+        # save transaction in db and  
+        # return phase 0
+        new_user =  User(
+                id = _id,
                 username = subject, 
-                password = db_user.password, 
+                password = "", 
                 blk_password=blk_passw,
                 name=screen_name,
                 blk_address=address
             )
-            perr = db.update_user(update_user)
-        else:
-            
-            # Create a db user
-            new_user = User(
-                username=subject,
-                password="",
-                blk_password=blk_passw,
-                name=screen_name,
-                blk_address=address
-            )
-            perr = db.create_user(new_user)
-        
+        data = UserSchema().dump(new_user)
+        data['original_session']  = event.header.session
+
+        transaction = Transaction(
+            hash=tid, 
+            event_name=self._event_type,
+            client=user.id,  
+            task = header.task,
+            params= json.dumps(data)
+        )
+
+        # save tid and data about user in blk_transaction table  
+        perr = db.create_transaction(transaction)
         if perr.isError():
-            err = DopUtils.create_dop_error(DopUtils.ERR_PL_SIGNUP)
+            err = DopUtils.create_dop_error(DopUtils.ERR_PL_TRANSACT_SAVE)
             err.perr = perr
             return err
+        
 
-        
-        perr = blk.account_send(self._owner_address, address, self._owner_pwd, self._airdrop )
-        if perr.isError():
-            err = DopUtils.create_dop_error(DopUtils.ERR_IP_SIGNUP)
-            err.perr = perr
-            return err 
-        
         event_payload = DopEventPayload({
                 "err": 0, 
                 "phase": phase,
