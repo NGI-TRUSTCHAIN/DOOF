@@ -1,3 +1,4 @@
+#   SPDX-License-Identifier: Apache-2.0
 #   © Copyright Ecosteer 2024
 
 from typing import Tuple, List

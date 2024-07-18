@@ -4,12 +4,6 @@
 #   auth:    graz
 #   date:    26/06/2024
 
-
-
-#   see (notes)
-#   https://github.com/soos3d/call-smart-contract-functions-using-web3.py
-#   https://ethereum.stackexchange.com/questions/76718/web3py-function-call-when-sender-must-be-certain-address
-
 from typing import Tuple, Optional, Union
 
 from common.python.error import DopError
@@ -129,7 +123,7 @@ class workerDoof(blockchainWorkerProvider):
         if not is_connected:
             return DopError(104, "Blockchain connection error.")
     
-        #   everything goo
+        #   everything good
         #   load the contract, the same contract instance will be
         #   used for any call
         err = self._get_doof()
@@ -616,7 +610,6 @@ class workerDoof(blockchainWorkerProvider):
     
     @staticmethod
     def _get_provider(provider):
-        # TODO refactoring
         if provider == 'ipc':
             return Web3.IPCProvider
         elif provider == 'http' or provider == 'https':

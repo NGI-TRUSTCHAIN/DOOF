@@ -1,4 +1,4 @@
-
+#   SPDX-License-Identifier: Apache-2.0
 # © Copyright 2024 Ecosteer
 
 #   ver:    1.0

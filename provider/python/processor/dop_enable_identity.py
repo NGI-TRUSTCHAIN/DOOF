@@ -1,4 +1,5 @@
 #   SPDX-License-Identifier: Apache-2.0
+#   © Copyright Ecosteer 2024
 
 #   version:    1.0
 #   author:     georgiana
