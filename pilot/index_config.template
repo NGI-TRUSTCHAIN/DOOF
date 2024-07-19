@@ -1,0 +1,17 @@
+{
+    "brokerHost": "BROKER_HOST",
+    "brokerPort": BROKER_PORT,
+    "brokerTopic": "BROKER_TOPIC",
+    "nginxHost": "NGINX_HOST",
+    "nginxPort": NGINX_PORT,
+    "mleCipher": [
+        {
+            "id": MLE_ID,
+            "cipher": "MLE_CIPHER",
+            "mode": "MLE_MODE"
+        }
+    ],
+    "authType": "AUTH_TYPE",
+    "ownerAppHost": "OWNER_APP_HOST",
+    "ownerAppPort": OWNER_APP_PORT
+}

@@ -118,7 +118,7 @@ function events() {
     session: "",
     task: "",
     event: "dop_product_subscriptions",
-    params: { auth_token: "", product_id: "" , type: ""},
+    params: { auth_token: "", product_id: "", type: "" },
   };
 
   let dop_purpose_create = {
@@ -146,7 +146,7 @@ function events() {
     session: "",
     task: "",
     event: "dop_recipient_set",
-    params: { auth_token: "" , subject: "", recipient: ""},
+    params: { auth_token: "", subject: "", recipient: "" },
   };
 
   let rif_advertisement_create = {
@@ -154,13 +154,6 @@ function events() {
     task: "",
     event: "rif_advertisement_create",
     params: { auth_token: "", secret: "", description: "", purpose_id: "", recipient_ads_id: "" },
-  };
-
-  let rif_advertisement_delete = {
-    session: "",
-    task: "",
-    event: "rif_advertisement_delete",
-    params: { auth_token: "", secret: "", recipient_ads_id: "" },
   };
 
   let rif_advertisement_interest = {
@@ -215,30 +208,29 @@ function events() {
 
   return {
     dop_product_subscribe: dop_product_subscribe,
-    dop_product_unsubscribe: dop_product_unsubscribe, 
-    dop_cipher_suite_selection: dop_cipher_suite_selection, 
-    dop_client_ready: dop_client_ready, 
-    dop_enable_identity: dop_enable_identity, 
-    dop_account_info: dop_account_info, 
+    dop_product_unsubscribe: dop_product_unsubscribe,
+    dop_cipher_suite_selection: dop_cipher_suite_selection,
+    dop_client_ready: dop_client_ready,
+    dop_enable_identity: dop_enable_identity,
+    dop_account_info: dop_account_info,
     dop_product_subscriptions: dop_product_subscriptions,
-    dop_purpose_create: dop_purpose_create, 
-    dop_purpose_list: dop_purpose_list, 
-    dop_subscription_info: dop_subscription_info, 
+    dop_purpose_create: dop_purpose_create,
+    dop_purpose_list: dop_purpose_list,
+    dop_subscription_info: dop_subscription_info,
     dop_subscription_grant: dop_subscription_grant,
-    dop_products_list: dop_products_list, 
-    dop_pub_configuration: dop_pub_configuration, 
-    dop_sub_configuration: dop_sub_configuration, 
+    dop_products_list: dop_products_list,
+    dop_pub_configuration: dop_pub_configuration,
+    dop_sub_configuration: dop_sub_configuration,
     dop_subscription_revoke: dop_subscription_revoke,
-    dop_product_create: dop_product_create, 
+    dop_product_create: dop_product_create,
     dop_recipient_set: dop_recipient_set,
-    rif_advertisement_create: rif_advertisement_create, 
-    rif_advertisement_delete: rif_advertisement_delete, 
-    rif_actionable_products: rif_actionable_products, 
-    rif_advertisement_list: rif_advertisement_list, 
-    rif_advertisement_interest: rif_advertisement_interest, 
-    rif_private_message_send: rif_private_message_send, 
-    rif_private_message_list: rif_private_message_list, 
-    rif_news_list: rif_news_list, 
-    custom_event: custom_event 
+    rif_advertisement_create: rif_advertisement_create,
+    rif_actionable_products: rif_actionable_products,
+    rif_advertisement_list: rif_advertisement_list,
+    rif_advertisement_interest: rif_advertisement_interest,
+    rif_private_message_send: rif_private_message_send,
+    rif_private_message_list: rif_private_message_list,
+    rif_news_list: rif_news_list,
+    custom_event: custom_event
   };
 }

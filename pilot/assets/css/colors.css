@@ -1,0 +1,50 @@
+/* SPDX-License-Identifier: Apache-2.0 © Copyright Ecosteer 2024 */
+@charset "UTF-8";
+
+:root {
+  /* Custom color variables */
+  --si-primary: #0E7597 !important;
+  --si-secondary: #9397ad !important;
+  --si-green: #75c46b !important;
+  --si-info: #4c82f7 !important;
+  --si-yellow: #ffba08 !important;
+  --si-red: #dc3545 !important;
+  --si-white: #fff !important;
+  --si-dark: #0b0f19 !important;
+
+  --si-purple: #6f42c1 !important;
+  --si-pink: #d63384 !important;
+  --si-orange: #fd7e14 !important;
+  --si-teal: #20c997 !important;
+  --si-cyan: #0dcaf0 !important;
+
+  /* Custom grayscale */
+  --si-gray-100: #f3f6ff !important;
+  --si-gray-200: #eff2fc !important;
+  --si-gray-300: #e2e5f1 !important;
+  --si-gray-400: #d4d7e5 !important;
+  --si-gray-500: #b4b7c9 !important;
+  --si-gray-600: #9397ad !important;
+  --si-gray-700: #565973 !important;
+  --si-gray-800: #33354d !important;
+  --si-gray-900: #0b0f19 !important;
+
+  /* Override Bootstrap variables */
+  --bs-primary: var(--si-primary) !important;
+  --bs-secondary: var(--si-secondary) !important;
+  --bs-success: var(--si-green) !important;
+  --bs-info: var(--si-info) !important;
+  --bs-warning: var(--si-warning) !important;
+  --bs-danger: var(--si-red) !important;
+  --bs-light: var(--si-light) !important;
+  --bs-dark: var(--si-dark) !important;
+
+  --bs-primary-rgb: 17, 176, 128 !important;
+  --bs-secondary-rgb: 147, 151, 173 !important;
+  --bs-success-rgb: 34, 197, 94 !important;
+  --bs-info-rgb: 76, 130, 247 !important;
+  --bs-warning-rgb: 255, 186, 8 !important;
+  --bs-danger-rgb: 239, 68, 68 !important;
+  --bs-light-rgb: 255, 255, 255 !important;
+  --bs-dark-rgb: 11, 15, 25 !important;
+}

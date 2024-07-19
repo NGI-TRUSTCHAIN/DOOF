@@ -1,0 +1,109 @@
+<!--   
+SPDX-License-Identifier: Apache-2.0
+© Copyright Ecosteer 2024
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- bootstrap -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
+    rel="stylesheet" />
+
+  <!-- style -->
+  <link rel="stylesheet" href="login.css" />
+
+  <style>
+    .row {
+      margin-top: +2%;
+    }
+
+    .pidlab {
+      font: courier;
+      font-family: monospace;
+      font-size: small;
+    }
+
+    .y-scrollable {
+      height: 300px;
+      overflow-y: scroll;
+    }
+  </style>
+  <title>Login Authentication</title>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const ret = urlParams.get("return");
+    const sid = urlParams.get("sid");
+
+    async function login(event) {
+      event.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const response = await fetch("/login-handler", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: username,
+            password: password,
+          }),
+        });
+
+        if (response.ok && response.status === 200) {
+          sessionStorage.setItem("username", username);
+          // Retrieve the token from the Authorization header
+          const authHeader = response.headers.get("Authorization");
+          if (authHeader) {
+            const token = authHeader.split(" ")[1];
+            // Store the token in sessionStorage
+            sessionStorage.setItem("jwt", token);
+          }
+
+          let redirectUrl = "/index.html"; // Default redirection
+          if (ret === "owner") {
+            redirectUrl = sid
+              ? `/apps/owner/owner_app.html?sid=${sid}`
+              : `/apps/owner/owner_app.html`;
+          }
+
+          window.location.href = redirectUrl;
+        } else if (response.status === 401) {
+          alert("Unauthorized: Invalid username or password");
+        } else {
+          alert(`Request failed with status: ${response.status}`);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred during login.");
+      }
+    }
+  </script>
+</head>
+
+<body class="login">
+  <form onsubmit="login(event)">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required />
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required />
+    <button type="submit">Login</button>
+  </form>
+</body>
+
+</html>

@@ -53,7 +53,6 @@ function DOOFwebAPIs(passedOptions) {
     dop_product_unsubscribe: { type: "dop_product_unsubscribe", fun: null },
     dop_recipient_set: { type: "dop_recipient_set", fun: null },
     rif_advertisement_create: { type: "rif_advertisement_create", fun: null },
-    rif_advertisement_delete: { type: "rif_advertisement_delete", fun: null },
     rif_actionable_products: { type: "rif_actionable_products", fun: null },
     rif_advertisement_list: { type: "rif_advertisement_list", fun: null },
     rif_advertisement_interest: {
@@ -85,6 +84,8 @@ function DOOFwebAPIs(passedOptions) {
   let onMessageCallback = null;
   let retryCount = 0;
   let isFirstConnection = true;
+  let isBrokerConnected = false;
+  let isSessionStarted = false;
 
   let errArray = [];
 
@@ -161,7 +162,7 @@ function DOOFwebAPIs(passedOptions) {
     const clientID = "CLID_" + currentTime.getTime() * randomNr;
 
     // Create a MQTT client instance
-    defaultOptions.client = new Paho.MQTT.Client(
+    defaultOptions.client = new Paho.Client(
       defaultOptions.brokerHost,
       Number(defaultOptions.brokerPort),
       clientID
@@ -193,28 +194,27 @@ function DOOFwebAPIs(passedOptions) {
 
     defaultOptions.client.onMessageArrived = onMessage;
 
-    try {
-      await new Promise((resolve, reject) => {
-        defaultOptions.client.connect({
-          useSSL: defaultOptions.tls,
-          onSuccess: () => {
-            console.log("onConnect");
-            if (isFirstConnection) {
-              isFirstConnection = false; // Mark not as a first connection for future attempts
-            }
-            retryCount = 0; // Reset retry count upon successful connection
-            resolve(0);
-          },
-          onFailure: (responseObject) => {
-            console.log("onFailure:" + JSON.stringify(responseObject));
-            reject(1);
-          },
-        });
+    await new Promise((resolve, reject) => {
+      defaultOptions.client.connect({
+        useSSL: defaultOptions.tls,
+        onSuccess: () => {
+          console.log("onConnect");
+          if (isFirstConnection) {
+            isFirstConnection = false; // Mark not as a first connection for future attempts
+          }
+          retryCount = 0; // Reset retry count upon successful connection
+          isBrokerConnected = true;
+
+          handlePendingActions();
+          resolve(0);
+        },
+        onFailure: (responseObject) => {
+          console.log("onFailure:" + JSON.stringify(responseObject));
+          reject(1);
+        },
       });
-      return 0;
-    } catch (error) {
-      return 1;
-    }
+    });
+    return 0;
   }
 
   function setMLEPref(wantedCiphers) {
@@ -262,6 +262,13 @@ function DOOFwebAPIs(passedOptions) {
     console.log("Topic to subscribe to: ", topicToSubscribe);
     defaultOptions.client.subscribe(topicToSubscribe);
     return;
+  }
+
+  function handlePendingActions() {
+    if (isBrokerConnected && isSessionStarted) {
+      subscribeToBroker(defaultOptions.thisSession);
+      dop_client_ready();
+    }
   }
 
   function onMessage(message) {
@@ -407,9 +414,9 @@ function DOOFwebAPIs(passedOptions) {
       defaultOptions.thisSession = data.session;
       defaultOptions.authToken = data.auth_token;
 
-      // Subscribe to the topic associated with this session
-      subscribeToBroker(defaultOptions.thisSession);
-      await dop_client_ready();
+      isSessionStarted = true;
+      handlePendingActions();
+
       return { error: 0, result: data };
     } catch (error) {
       console.log("Error when retrieving session");
@@ -789,6 +796,7 @@ function DOOFwebAPIs(passedOptions) {
     authToken,
     productID,
     purposeID,
+    preAuthCode,
     options = null
   ) {
     let subscribeEvent = deepClone(eventsJSON.dop_product_subscribe);
@@ -797,6 +805,7 @@ function DOOFwebAPIs(passedOptions) {
     subscribeEvent.params.auth_token = authToken;
     subscribeEvent.params.product_id = productID;
     subscribeEvent.params.purpose_id = purposeID;
+    subscribeEvent.params.pre_auth_code = preAuthCode;
 
     let opt = normalizeOptions(options);
     subscribeEvent.task = "task" in opt.header ? opt.header.task : null;
@@ -1039,38 +1048,6 @@ function DOOFwebAPIs(passedOptions) {
     thisEvent.params.secret = secret;
     thisEvent.params.description = description;
     thisEvent.params.purpose_id = purpose_id;
-    thisEvent.params.recipient_ads_id = recipient_ads_id;
-
-    let opt = normalizeOptions(options);
-    thisEvent.task = "task" in opt.header ? opt.header.task : null;
-
-    copyParams(opt, thisEvent);
-
-    console.log("Sending event: ");
-    console.log(JSON.stringify(thisEvent));
-
-    const { error: eventErr, result: eventRes } = await sendEvent(thisEvent);
-    if (eventErr !== 0) {
-      console.log("Error when posting event: ", eventRes);
-      return { error: eventErr, result: eventRes };
-    } else {
-      console.log("The event was posted successfully: ", eventRes);
-      return { error: eventErr, result: eventRes };
-    }
-  }
-
-  async function rif_advertisement_delete(
-    session,
-    authToken,
-    secret,
-    recipient_ads_id,
-    options = null
-  ) {
-    let thisEvent = deepClone(eventsJSON.rif_advertisement_delete);
-
-    thisEvent.session = session;
-    thisEvent.params.auth_token = authToken;
-    thisEvent.params.secret = secret;
     thisEvent.params.recipient_ads_id = recipient_ads_id;
 
     let opt = normalizeOptions(options);
@@ -1374,7 +1351,6 @@ function DOOFwebAPIs(passedOptions) {
     dop_recipient_set,
     custom_event,
     rif_advertisement_create,
-    rif_advertisement_delete,
     rif_actionable_products,
     rif_advertisement_list,
     rif_advertisement_interest,
