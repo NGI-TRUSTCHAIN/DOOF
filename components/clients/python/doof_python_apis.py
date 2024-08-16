@@ -253,7 +253,7 @@ class DOOFPythonAPIs:
         err = self._app_protocol.load_providers(self._conf_dict)
         if err.isError():
             return err
-        # Handlers for events: they are defined in the dop_python_apis module
+        # Handlers for events: they are defined in the doof_python_apis module
         # and used by the application protocol on dipatching of events
         self._app_protocol.set_on_dop_account_info(
             self.dop_account_info_handler
@@ -348,7 +348,7 @@ class DOOFPythonAPIs:
 
  
     def tracefun(self, called):
-        print(f"dop_python_apis - {called}")
+        print(f"doof_python_apis - {called}")
     
     def tracemsg(self, msg: str):
         print(f"{msg}")
@@ -356,6 +356,7 @@ class DOOFPythonAPIs:
     def login(self, username, password):
         payload = {"username": username, "password": password}
         request = f"@JSON;{json.dumps(payload)}"
+        print(request)
         err = self._app_protocol.write_to_endpoint(request, self._app_protocol.login_endpoint) 
         print(err)
         return err
@@ -368,6 +369,7 @@ class DOOFPythonAPIs:
             username = self._username
         payload = {"sub": username}
         request = f"@JSON;{json.dumps(payload)}"
+        print(request)
         err = self._app_protocol.write_to_endpoint(request, self._app_protocol.startsession_endpoint, self.auth_header) 
         print(err)
         return err 
@@ -392,6 +394,7 @@ class DOOFPythonAPIs:
 
     def send_custom_event(self, event, options=None):
         request = f"@JSON;{json.dumps(event)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         return err
 
@@ -408,6 +411,7 @@ class DOOFPythonAPIs:
         ev['params']['auth_token'] = self.auth_token
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         print(err)
         return err
@@ -434,6 +438,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         print(err) 
         return err 
@@ -451,6 +456,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         print(err)
         return err
@@ -472,6 +478,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         #err = self._app_protocol.write(request, self.auth_header)
         err = self._app_protocol.write_to_endpoint(request, self._app_protocol.admin_endpoint, self.auth_header)
         return err
@@ -492,6 +499,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         #err = self._app_protocol.write(request, self.auth_header)
         err = self._app_protocol.write_to_endpoint(request, self._app_protocol.admin_endpoint, self.auth_header)
         return err 
@@ -515,6 +523,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         return err
         
@@ -538,6 +547,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         return err
         
@@ -558,6 +568,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         return err
         
@@ -576,6 +587,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         return err
         
@@ -599,6 +611,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         return err
         
@@ -618,6 +631,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         return err
 
@@ -638,6 +652,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         return err 
     
@@ -654,6 +669,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         return err 
         
@@ -673,6 +689,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         return err
         
@@ -694,6 +711,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         return err
         
@@ -713,6 +731,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         return err 
         
@@ -732,6 +751,7 @@ class DOOFPythonAPIs:
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
+        print(request)
         err = self._app_protocol.write(request, self.auth_header)
         return err
         
@@ -977,7 +997,10 @@ class DOOFPythonAPIs:
         self.dop_client_ready(1)
 
         while not self.client_ready_sync.is_set():
+            
             self.client_ready_sync.wait(0.5)
+            #self.dop_client_ready(1)
+
         self.client_ready_sync.clear()
     
         chosen_cipher_suite = self._app_protocol.mle_client.choose_ciphersuite(self.backend_ciphers)
