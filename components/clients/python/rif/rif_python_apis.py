@@ -70,7 +70,7 @@ class RifPythonAPIs(DOOFPythonAPIs):
         ev['params']['recipient_ads_id'] = rec_ads_id
         # send event
         request = f"@JSON;{json.dumps(ev)}"
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         print(err)
         return err 
     
@@ -87,7 +87,7 @@ class RifPythonAPIs(DOOFPythonAPIs):
         
         # send event
         request = f"@JSON;{json.dumps(ev)}"
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         print(err)
         return err
 
@@ -111,7 +111,7 @@ class RifPythonAPIs(DOOFPythonAPIs):
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         print(err)
         return err
 
@@ -133,7 +133,7 @@ class RifPythonAPIs(DOOFPythonAPIs):
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         print(err)
         return err
 
@@ -156,7 +156,7 @@ class RifPythonAPIs(DOOFPythonAPIs):
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         print(err)
         return err 
 
@@ -174,7 +174,7 @@ class RifPythonAPIs(DOOFPythonAPIs):
         
         # send event
         request = f"@JSON;{json.dumps(ev)}"
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         print(err)
         return err 
 
@@ -192,7 +192,7 @@ class RifPythonAPIs(DOOFPythonAPIs):
         
         # send event
         request = f"@JSON;{json.dumps(ev)}"
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         print(err)
         return err
 
@@ -212,7 +212,7 @@ class RifPythonAPIs(DOOFPythonAPIs):
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         print(err)
         return err
 
@@ -234,7 +234,7 @@ class RifPythonAPIs(DOOFPythonAPIs):
 
         # send event
         request = f"@JSON;{json.dumps(ev)}"
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         print(err)
 
         return err

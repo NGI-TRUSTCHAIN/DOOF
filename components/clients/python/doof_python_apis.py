@@ -61,6 +61,14 @@ class DOOFPythonAPIs:
         self._prov_available = prov_available 
         self._app_protocol = None
 
+        # Application specific endpoints (also configured via conf file)
+        self._endpoints = {
+            'wbl_api' : '/dop/imperatives',
+            'session_api' : '/dop/startsession',
+            'admin_api': '/dop/syadmin',
+            'login_api' : '/login-handler'
+        }
+
         # SESSION INFO
         self._logged_in = False
         self._username = ""
@@ -129,6 +137,11 @@ class DOOFPythonAPIs:
         }
 
         self._configured = False
+
+
+    @property 
+    def endpoints(self):
+        return self._endpoints
 
     @property 
     def custom_sync(self):
@@ -245,11 +258,14 @@ class DOOFPythonAPIs:
         if err.isError():
             return err 
         self._conf_dict = conf_dict 
-
+        if 'endpoints' in conf_dict:
+            self._endpoints = conf_dict.get('endpoints')
         self._app_protocol = AppProtocol(conf_file, self._stop_event, prov_available=self._prov_available)
         self._app_protocol.set_userdata(self)
-
         
+        self._app_protocol.startsession_endpoint = self._endpoints['session_api']
+        self._app_protocol.login_endpoint = self._endpoints['login_api']
+    
         err = self._app_protocol.load_providers(self._conf_dict)
         if err.isError():
             return err
@@ -357,7 +373,7 @@ class DOOFPythonAPIs:
         payload = {"username": username, "password": password}
         request = f"@JSON;{json.dumps(payload)}"
         print(request)
-        err = self._app_protocol.write_to_endpoint(request, self._app_protocol.login_endpoint) 
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['login_api']) 
         print(err)
         return err
     
@@ -370,7 +386,7 @@ class DOOFPythonAPIs:
         payload = {"sub": username}
         request = f"@JSON;{json.dumps(payload)}"
         print(request)
-        err = self._app_protocol.write_to_endpoint(request, self._app_protocol.startsession_endpoint, self.auth_header) 
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['session_api'], self.auth_header) 
         print(err)
         return err 
 
@@ -395,7 +411,7 @@ class DOOFPythonAPIs:
     def send_custom_event(self, event, options=None):
         request = f"@JSON;{json.dumps(event)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         return err
 
     def dop_account_info(self, task = ''):
@@ -412,7 +428,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         print(err)
         return err
 
@@ -439,7 +455,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         print(err) 
         return err 
     
@@ -457,7 +473,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         print(err)
         return err
 
@@ -479,8 +495,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        #err = self._app_protocol.write(request, self.auth_header)
-        err = self._app_protocol.write_to_endpoint(request, self._app_protocol.admin_endpoint, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request,  self.endpoints['admin_api'], self.auth_header)
         return err
 
     def dop_recipient_set(self, subject: str, recipient: str, task=""):
@@ -500,8 +515,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        #err = self._app_protocol.write(request, self.auth_header)
-        err = self._app_protocol.write_to_endpoint(request, self._app_protocol.admin_endpoint, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['admin_api'], self.auth_header)
         return err 
 
     def dop_product_create(self, label, price, period, data_origin = "", task=""):
@@ -524,7 +538,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         return err
         
 
@@ -548,7 +562,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         return err
         
 
@@ -569,7 +583,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         return err
         
     def dop_product_unsubscribe(self, subscription_id: str, task=""):
@@ -588,7 +602,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         return err
         
 
@@ -612,7 +626,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         return err
         
 
@@ -632,7 +646,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         return err
 
     def dop_purpose_create(self, label: str, content:str, task=""):
@@ -653,7 +667,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         return err 
     
 
@@ -670,7 +684,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         return err 
         
     def dop_sub_configuration(self, subscription_id:str, task=""):
@@ -690,7 +704,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         return err
         
         
@@ -712,7 +726,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         return err
         
 
@@ -732,7 +746,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         return err 
         
 
@@ -752,7 +766,7 @@ class DOOFPythonAPIs:
         # send event
         request = f"@JSON;{json.dumps(ev)}"
         print(request)
-        err = self._app_protocol.write(request, self.auth_header)
+        err = self._app_protocol.write_to_endpoint(request, self.endpoints['wbl_api'], self.auth_header)
         return err
         
     
@@ -970,6 +984,44 @@ class DOOFPythonAPIs:
         #print(mess_dict)
         response_content = mess_dict.get('response_content')
         
+    def setup_unauth_session(self, username):
+        """
+        Call this method to setup a non-authenticated session (don't use authentication
+        server)
+        """
+        self.open_output()
+        self.username = username
+        
+        self.logged_in = True
+        self.start_session(username)
+
+        while not self.start_session_sync.is_set():
+            self.start_session_sync.wait(0.5)
+        self.start_session_sync.clear()
+
+        err = self.open_input(self.session)
+        if err.isError():
+            print("Could not create a session with the back-end")
+        
+        self.dop_client_ready(1)
+
+        while not self.client_ready_sync.is_set():
+            self.client_ready_sync.wait(0.5)
+        self.client_ready_sync.clear()
+    
+        chosen_cipher_suite = self._app_protocol.mle_client.choose_ciphersuite(self.backend_ciphers)
+        keylength_bytes = int(int(chosen_cipher_suite['keylength'])/8)
+        self._app_protocol.mle_client.generate_key(keylength_bytes)
+        key_b64 = self._app_protocol.mle_client.b64_key
+
+        self.dop_cipher_suite_selection(chosen_cipher_suite, key_b64)
+
+        while not self.css_sync.is_set():
+            self.css_sync.wait(0.5)
+        self.css_sync.clear()
+        
+
+    
     def setup_new_session(self, username, password):
         """ Call this method to setup a new authenticated session for the supplied user.
             The DOOFPythonAPIs should have already been initialized with the configuration 

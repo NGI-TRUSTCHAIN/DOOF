@@ -1,0 +1,47 @@
+input:
+  verbose: true
+
+output:
+  verbose: true
+
+
+endpoints: 
+  wbl_api: '/imperatives'
+  session_api: '/startsession'
+  admin_api: '/sysadmin'
+  login_api: '/login-handler' 
+
+# providers
+inputProvider:
+  path:   '/home/ecosteer/dop/provider/python/presentation/input/mqtt/pres_input_mqtt.py'
+  class:  'inputMqttPaho'
+  configuration:  'h=BROKER_HOST;p=BROKER_PORT;t=events/%SESSION%;rc=10;ka=60;q=1;tout=10;prf=grz_'  
+
+outputProvider:
+  path:   '/home/ecosteer/dop/provider/python/presentation/output/http/pres_out_in_https.py'
+  class:  'https_provider'
+  configuration:  'host=GATEWAY_HOST;port=GATEWAY_PORT;WBL_API=GATEWAY_API;timeout=60;ssl=SSL_VALUE'
+
+
+encoding_provider:
+  path: '/home/ecosteer/dop/provider/python/encoding/encoding_functions.py'
+  class: 'EncodingFunctionProvider'
+  name: 'encoding'
+  configuration: ''
+
+integrity_provider:
+  path: '/home/ecosteer/dop/provider/python/integrity/integrity_functions.py'
+  class: IntegrityFunctionProvider
+  configuration : ""
+
+crypto_providers:
+  
+  - path: '/home/ecosteer/dop/provider/python/encryption/plaintext/crypto_plaintext.py' 
+    class: CryptoPlaintext
+    name: plaintext
+    configuration: ''
+
+  - path: '/home/ecosteer/dop/provider/python/encryption/none/none_encryption.py' 
+    class: 'NoneEncryption'
+    name: 'none'
+    configuration: ''

@@ -38,8 +38,8 @@ class AppProtocol:
         # TODO: the following endpoints should be configurable
         self._login_endpoint = "/login-handler"
         self._startsession_endpoint = "/dop/startsession"
-        self._imperatives_endpoint = "/dop/imperatives"     # this is taken from conf file
-        self._admin_endpoint = "/dop/sysadmin"
+        #self._imperatives_endpoint = "/dop/imperatives"     # this is taken from conf file
+        #self._admin_endpoint = "/dop/sysadmin"
 
 
         self._input_configured = False
@@ -110,13 +110,22 @@ class AppProtocol:
     def login_endpoint(self):
         return self._login_endpoint
 
-    @property
-    def admin_endpoint(self):
-        return self._admin_endpoint
+    
+    @login_endpoint.setter 
+    def login_endpoint(self, login):
+        self._login_endpoint = login
+
+    #@property
+    #def admin_endpoint(self):
+    #    return self._admin_endpoint
     
     @property 
     def startsession_endpoint(self):
         return self._startsession_endpoint
+
+    @startsession_endpoint.setter
+    def startsession_endpoint(self, startsession):
+        self._startsession_endpoint = startsession
 
     @property
     def callbackLock(self):
