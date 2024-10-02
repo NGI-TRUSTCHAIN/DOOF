@@ -1,0 +1,4 @@
+#!/bin/bash
+
+export PYTHONPATH=${PYTHONPATH}:${HOME}/NGI-TRUSTCHAIN/DOOF
+
