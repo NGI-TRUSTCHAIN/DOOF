@@ -538,7 +538,7 @@ def main(confFilePath, args, open_providers) -> DopError:
     output_configuration: dict = configuration_dict['outputProvider']
 
     db_configuration: dict = configuration_dict['databaseProvider']
-    blk_configuration: dict = configuration_dict['blockchainWorkerProvider']
+    blk_configuration: dict = configuration_dict['intermediationWorkerProvider']
 
     logger_configuration: dict = configuration_dict['loggingProvider']
 
