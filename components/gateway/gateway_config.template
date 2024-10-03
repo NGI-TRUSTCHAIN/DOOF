@@ -1,0 +1,11 @@
+
+outputProvider:
+  path:   '/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/presentation/output/rabbitmq/pres_output_rabbitqueue.py'
+  class: 'outputRabbitQueue'
+  configuration: 'url=amqp://MQUSER:MQPASSWORD@MESSAGEQ_HOST:MESSAGEQ_PORT/;queue_name=Q_NAME;rc=10;rd=10;dm=1;'
+
+
+loggingProvider:
+  path: '/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/logger/stdout/std_stream_logger.py'
+  class: 'stdStreamLogger'
+  configuration: 'loglevel=1-5;name=22;qsize=10000'
