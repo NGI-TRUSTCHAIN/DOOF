@@ -302,7 +302,7 @@ class LogSubscriptionCreateProcessor(ProcessorProvider):
     def _user_notification(self, event, envs) -> DopError:
         # This method prepares the data needed for notifying the result of the 
         # operation to the other interested party (published/subscriber)
-        from provider.python.processor.pipeline.find_sessions_mle_processor import FindSessionsMLEProcessor
+        from provider.python.processor.find_sessions_mle_processor import FindSessionsMLEProcessor
         processor = FindSessionsMLEProcessor()
         # this processor can be configured to send the event on all the active sessions 
         processor.init("multiple_sessions=true;")

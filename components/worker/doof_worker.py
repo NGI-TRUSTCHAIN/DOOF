@@ -206,6 +206,8 @@ class Worker:
             return DopUtils.create_dop_error(DopUtils.ERR_SESSION_REQ), body
     
         # the token contains only hex chars
+        if session == '-': 
+            session = "00000000-0000-0000-0000-000000000000"
         try:
             tmp_session = session.replace('-', '')
         except Exception as e:
@@ -224,10 +226,8 @@ class Worker:
             err.notifiable = False
             return err, body 
         
-        if event_f != DopEvent.LOGIN \
-            and event_f != DopEvent.ENCRYPTION_LOGIN \
-            and event_f != DopEvent.CIPHER_SUITE_QUERY \
-            and event_f != "dop_log": 
+        if event_f != DopEvent.CIPHER_SUITE_QUERY \
+            and event_f != "event_set": 
             
             params = body.get("params", None)
             if params is None: 
