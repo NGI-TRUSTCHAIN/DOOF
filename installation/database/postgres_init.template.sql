@@ -1,0 +1,4 @@
+CREATE USER _user_ WITH PASSWORD '_password_';
+ALTER USER _user_ WITH SUPERUSER;
+GRANT ALL PRIVILEGES ON DATABASE _database_ TO _user_;
+
