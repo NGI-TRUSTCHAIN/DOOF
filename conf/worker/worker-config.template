@@ -1,0 +1,544 @@
+ {
+  "databaseProvider":{ 
+    "path" : "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/persistence/postgres/rif_postgres.py",
+    "class" : "RIFdbProviderPostgres",
+    "configuration" : "driver=PostgreSQL Unicode;servername=DATABASE_HOST;port=DATABASE_PORT;database=DATABASE_NAME;uid=DATABASE_USER;pwd=ecosteer;"
+  },
+ 
+  "intermediationWorkerProvider":{
+    "path":   "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/intermediation/worker/doof/worker_doof.py",
+    "class": "workerDoof",
+    "configuration": "provider=http;endpoint=http://BLOCKCHAIN_HOST:BLOCKCHAIN_PORT;set_balance=True;gas=8000000;contract_abi=/home/ecosteer/dop/intermediation/doof/target/Doof.abi;contract_address=BLOCKCHAIN_CONTR_ADDR;owner_address=BLOCKCHAIN_OWNER_ADDR;owner_password=BLOCKCHAIN_OWNER_PWD"
+  },
+
+  "inputProvider" : {
+    "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/presentation/input/rabbitmq/pres_input_rabbitqueue.py",
+    "class": "inputRabbitQueue",
+    "configuration": "url=amqp://MQUSER:MQPASSWORD@MESSAGEQ_HOST:MESSAGEQ_PORT/;queue_name=Q_NAME;rc=10;rd=10;dm=1;"
+  
+  },
+
+  "outputProvider": {
+    "path":   "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/presentation/output/mqtt/pres_output_mqtt.py",
+    "class": "outputMqttPaho",
+    "configuration": "h=BROKER_HOST;p=BROKER_PORT;t=events;rc=10;ka=60;q=1;tout=15;prf=grz_"
+  }, 
+
+  "loggingProvider": {
+    "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/logger/stdout/std_stream_logger.py",
+    "class": "stdStreamLogger",
+    "configuration": "loglevel=1-5;name=24;qsize=10000"
+  },
+
+  "integrityProvider":{
+    "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/integrity/integrity_functions.py",
+    "class": "IntegrityFunctionProvider",
+    "name": "integrity",
+    "configuration": ""
+  },
+
+  "encodingProvider":{
+    "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/encoding/encoding_functions.py",
+    "class": "EncodingFunctionProvider",
+    "name": "encoding",
+    "configuration": ""
+  },
+
+  "cryptoProviders": {
+    "plaintext":  {
+      "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/encryption/plaintext/crypto_plaintext.py",
+      "class": "CryptoPlaintext",
+      "configuration": ""
+    },
+    "none":{ 
+      "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/encryption/none/none_encryption.py",
+      "class": "NoneEncryption",
+      "configuration": ""
+    }
+  },
+  "macros":{
+    "AUTH_MACRO":[
+      {
+        "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/authentication_check.py",
+        "class": "AuthenticationCheckProcessor",
+        "configuration":"" 
+       }
+    ],
+    "UPDATE_SESSION_MACRO":[
+      {
+        "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/update_session.py",
+        "class": "UpdateSessionProcessor",
+        "configuration":"" 
+       }
+    ],
+    "MLE_LOOKUP": [
+      {
+        "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/find_sessions_mle_processor.py",
+        "class":"FindSessionsMLEProcessor",
+        "configuration": "multiple_sessions=false;"
+      }
+    ],
+
+    "RIF_NEWS_ADD_MACRO" : [
+      {
+        "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/rif/eth_rif_news_add.py",
+        "class" : "RifNewsAddProcessor",
+        "configuration" : ""  
+      }
+      ],
+
+    "FINALLY_MLE_ENCRYPT": [
+      {
+        "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/fin_event_multiplication_mle.py",
+        "class": "EventMultiplicationMLEProcessor",
+        "configuration":"" 
+       }
+    ],
+    "FINALLY_TYPE_TO_SESSION" : [
+      {
+        "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/fin_event_type_to_session.py",
+        "class": "EventTypeToSessionProcessor",
+        "configuration":""   
+      }
+    ]
+
+  },
+  "pipelines" : {
+        
+    "event_set" :
+      {
+        "main": [{
+          "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_log_member_create.py",
+          "class": "LogMemberCreateProcessor", 
+          "configuration": ""
+        }, 
+        {
+          "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_log_product_create.py",
+          "class": "LogProductCreateProcessor", 
+          "configuration": ""
+        },
+        {
+          "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_log_subscription_create.py",
+          "class": "LogSubscriptionCreateProcessor",
+          "configuration": ""
+        },
+        {
+          "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_log_subscription_granted.py",
+          "class": "LogSubscriptionGrantedProcessor",
+          "configuration": ""
+        }, 
+        {
+          "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_log_subscription_revoked.py",
+          "class": "LogSubscriptionRevokedProcessor",
+          "configuration": ""
+        },
+        {
+          "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_log_subscription_delete.py",
+          "class": "LogSubscriptionDeleteProcessor",
+          "configuration": ""
+        },
+        "$RIF_NEWS_ADD_MACRO"
+        ], 
+        "finally": ["$FINALLY_MLE_ENCRYPT"] 
+      }, 
+      
+    "events_set" : {
+        "main": [], 
+        "finally": ["$FINALLY_MLE_ENCRYPT"]
+      }, 
+
+    "start_session":{
+        "main": 
+        [{
+            "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/start_session_processor.py",
+            "class": "StartSessionProcessor",
+            "configuration": ""
+        }], 
+        "finally": 
+        [
+            "$FINALLY_TYPE_TO_SESSION"
+        ]
+    },
+        
+    "dop_client_ready" : {
+        "main": 
+        [
+        "$AUTH_MACRO",
+        "$UPDATE_SESSION_MACRO",
+        {
+            "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_client_ready.py",
+            "class": "DopClientReadyProcessor",
+            "configuration": ""
+        }],
+        "finally": 
+        [
+            "$FINALLY_TYPE_TO_SESSION"
+        ]
+        },
+
+    "dop_cipher_suite_selection" : {
+        "main": 
+        [
+        "$AUTH_MACRO",
+        "$UPDATE_SESSION_MACRO",
+        {
+            "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_cipher_suite_selection.py",
+            "class": "DopCipherSuiteSelectionProcessor",
+            "configuration": ""
+        }, 
+        "$MLE_LOOKUP"
+        ],
+        "finally": 
+        [
+        "$FINALLY_MLE_ENCRYPT"
+        ]
+        },
+
+    "dop_products_list" : {
+        "main": [
+            "$AUTH_MACRO",
+            "$UPDATE_SESSION_MACRO",
+            "$MLE_LOOKUP", 
+            {
+              "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_products_list.py",
+              "class": "DopProductsListProcessor",
+              "configuration": ""
+            }
+            ], 
+        "finally": ["$FINALLY_MLE_ENCRYPT"]
+      }, 
+      
+    "dop_sub_configuration": 
+      {
+        "main": [
+            "$AUTH_MACRO",
+            "$UPDATE_SESSION_MACRO",
+            "$MLE_LOOKUP",
+             {
+                "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_sub_configuration.py",
+                "class": "DopSubConfigurationProcessor",
+                "configuration": "proxy_addr=PROC_PROXY_ADDR;proxy_port=PROC_PROXY_PORT;"
+              }   
+        ], 
+        "finally": ["$FINALLY_MLE_ENCRYPT"]
+      }, 
+
+    "dop_product_subscribe": 
+     {
+        "main": [      
+            "$AUTH_MACRO",
+            "$UPDATE_SESSION_MACRO",
+            "$MLE_LOOKUP",
+            {
+              "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_product_subscribe.py",
+              "class": "DopProductSubscribeProcessor",
+              "configuration": ""
+          }
+          ], 
+        "finally": ["$FINALLY_MLE_ENCRYPT"]
+      }, 
+
+    "dop_product_subscriptions" :
+      {
+        "main": [     
+            "$AUTH_MACRO",
+            "$UPDATE_SESSION_MACRO",
+            "$MLE_LOOKUP",
+            {
+              "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_product_subscriptions.py",
+              "class": "DopProductSubscriptionsProcessor",
+              "configuration": ""
+            }
+            ], 
+        "finally": ["$FINALLY_MLE_ENCRYPT"]
+      }, 
+      
+    "dop_account_info":
+      {
+        "main": [
+          "$AUTH_MACRO",
+            "$UPDATE_SESSION_MACRO",
+            "$MLE_LOOKUP",
+            {
+              "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_account_info.py",
+              "class": "DopAccountInfoProcessor",
+              "configuration": ""
+          }
+        ], 
+        "finally": ["$FINALLY_MLE_ENCRYPT"]
+      }, 
+    
+    "dop_subscription_info":
+      {
+        "main": [
+            "$AUTH_MACRO",
+            "$UPDATE_SESSION_MACRO",
+            "$MLE_LOOKUP",
+             {
+              "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_subscription_info.py",
+              "class": "DopSubscriptionInfoProcessor",
+              "configuration": ""
+            }
+            ], 
+        "finally": ["$FINALLY_MLE_ENCRYPT"]
+      }, 
+
+    "dop_enable_identity": {
+        "main": 
+        [
+        "$AUTH_MACRO",
+        "$UPDATE_SESSION_MACRO",
+        "$MLE_LOOKUP",
+        {  
+            "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_enable_identity.py",
+            "class": "DopEnableIdentityProcessor",
+            "configuration": ""
+        }
+        ], 
+        "finally": 
+        [
+        "$FINALLY_MLE_ENCRYPT"
+        ]
+      },
+
+    "dop_recipient_set" :
+      {
+        "main": [ 
+          "$AUTH_MACRO",
+          "$UPDATE_SESSION_MACRO",
+          "$MLE_LOOKUP",
+          {
+            "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_recipient_set.py",
+            "class": "DopRecipientSetProcessor",
+            "configuration": "" 
+          }], 
+        "finally": ["$FINALLY_MLE_ENCRYPT"]
+      },
+
+    "dop_product_create":   {
+        "main": [
+            "$AUTH_MACRO",
+            "$UPDATE_SESSION_MACRO",
+            "$MLE_LOOKUP",
+            {
+              "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_product_create.py",
+              "class": "DopProductCreateProcessor",
+              "configuration": ""
+          }
+        ], 
+        "finally": ["$FINALLY_MLE_ENCRYPT"]
+      },
+      
+    "dop_purpose_create": {
+        "main": [
+          "$AUTH_MACRO",
+          "$UPDATE_SESSION_MACRO",
+          "$MLE_LOOKUP",
+          {
+            "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_purpose_create.py",
+            "class": "DopPurposeCreateProcessor",
+            "configuration": ""
+          }
+        ], 
+        "finally": ["$FINALLY_MLE_ENCRYPT"]
+    },
+
+    "dop_purpose_list": {
+        "main": [
+          "$AUTH_MACRO",
+          "$UPDATE_SESSION_MACRO",
+          "$MLE_LOOKUP",
+          {
+            "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_purpose_list.py",
+            "class": "DopPurposeListProcessor",
+            "configuration": ""
+          }
+        ], 
+        "finally": ["$FINALLY_MLE_ENCRYPT"]
+    },
+
+    "dop_pub_configuration": {  
+        "main": [
+            "$AUTH_MACRO",
+            "$UPDATE_SESSION_MACRO",
+            "$MLE_LOOKUP",
+            {
+              "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_pub_configuration.py",
+              "class": "DopPubConfigurationProcessor",
+              "configuration": "proxy_addr=PROC_PROXY_ADDR;proxy_port=PROC_PROXY_PORT;kma=@KEY_MAXAGE;kimc=@KEY_INVALIC_MC;swg=@START_WITH_GET;loop_interval=5000"
+          }
+        ], 
+        "finally": ["$FINALLY_MLE_ENCRYPT"]
+    }, 
+
+    "dop_subscription_grant" :
+    {
+        "main": [
+            "$AUTH_MACRO",
+            "$UPDATE_SESSION_MACRO",
+            "$MLE_LOOKUP",
+            {
+              "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_subscription_grant.py",
+              "class": "DopSubscriptionGrantProcessor",
+              "configuration": ""
+            }
+          ],
+        "finally": ["$FINALLY_MLE_ENCRYPT"]
+    }, 
+
+    "dop_subscription_revoke":
+      {
+        "main": [ 
+            "$AUTH_MACRO",
+            "$UPDATE_SESSION_MACRO",
+            "$MLE_LOOKUP",
+            {
+              "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_subscription_revoke.py",
+              "class": "DopSubscriptionRevokeProcessor",
+              "configuration": ""
+            }
+          ], 
+        "finally": ["$FINALLY_MLE_ENCRYPT"]
+    }, 
+
+    "dop_product_unsubscribe":
+      {
+      "main": [
+          "$AUTH_MACRO",
+          "$UPDATE_SESSION_MACRO",
+          "$MLE_LOOKUP",
+          {
+            "path":"/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dop_product_unsubscribe.py",
+            "class": "DopProductUnsubscribeProcessor",
+            "configuration": ""
+          }        
+        ], 
+        "finally": ["$FINALLY_MLE_ENCRYPT"]
+     },
+      
+    "dex_change_password" : 
+    {
+      "main": [
+        "$AUTH_MACRO",
+        "$UPDATE_SESSION_MACRO",
+        "$MLE_LOOKUP",
+        {
+          "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dex_change_password.py",
+          "class" : "DexChangePasswordProcessor",
+          "configuration" : "driver=PostgreSQL Unicode;servername=HOST_ACCOUNT_DB;port=PORT_ACCOUNT_DB;database=ACCOUNT_DB_NAME;uid=ACCOUNT_DB_USER;pwd=ecosteer;"
+        }],
+        "finally: [
+          "$FINALLY_MLE_ENCRYPT"
+    ]},
+
+    "dex_change_screen" : {
+      "main": [
+        "$AUTH_MACRO",
+        "$UPDATE_SESSION_MACRO",
+        "$MLE_LOOKUP",
+        {
+          "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/dex_change_screen.py",
+          "class" : "DexChangeScreenProcessor",
+          "configuration" : ""
+        }], 
+      "finally": [
+        "$FINALLY_MLE_ENCRYPT"
+      ]},
+
+    "rif_advertisement_create" : {
+      "main": [
+        "$AUTH_MACRO",
+        "$UPDATE_SESSION_MACRO", 
+        "$MLE_LOOKUP",
+        {
+          "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/rif_advertisement_create.py",
+          "class" : "RifAdvertisementCreateProcessor",
+          "configuration" : ""
+        }], 
+        "finally": [
+          "$FINALLY_MLE_ENCRYPT"
+        ]}
+        ,
+  "rif_advertisement_interest" :{
+      "main":  [
+        "$AUTH_MACRO",
+        "$UPDATE_SESSION_MACRO",
+        "$MLE_LOOKUP",
+        {
+          "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/rif/rif_advertisement_interest.py",
+          "class" : "RifAdvertisementInterestProcessor",
+          "configuration" : ""
+        }], 
+    "finally": [
+      "$FINALLY_MLE_ENCRYPT"
+  ]},
+  "rif_advertisement_list" :{
+      "main":  [
+        "$AUTH_MACRO",
+        "$UPDATE_SESSION_MACRO",
+        "$MLE_LOOKUP",
+        {
+          "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/rif_advertisement_list.py",
+          "class" : "RifAdvertisementListProcessor",
+          "configuration" : ""
+        }],
+      "finally" :[
+    "$FINALLY_MLE_ENCRYPT"
+      ]},
+
+  "rif_private_message_send" : {
+      "main": [
+        "$AUTH_MACRO",
+        "$UPDATE_SESSION_MACRO",
+        "$MLE_LOOKUP",
+        {
+          "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/rif_private_message_send.py",
+          "class" : "RifPrivateMessageSendProcessor",
+          "configuration" : ""
+        }],
+      "finally": [
+        "$FINALLY_MLE_ENCRYPT"
+    ]},
+
+  "rif_private_message_list" : {
+      "main": [
+        "$AUTH_MACRO",
+        "$UPDATE_SESSION_MACRO",
+        "$MLE_LOOKUP",
+        {
+          "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/rif_private_message_list.py",
+          "class" : "RifPrivateMessageListProcessor",
+          "configuration" : ""
+        }],
+      "finally":[ 
+        "$FINALLY_MLE_ENCRYPT"
+  ]},
+  "rif_actionable_products" :{
+      "main":  [
+        "$AUTH_MACRO",
+        "$UPDATE_SESSION_MACRO",
+        "$MLE_LOOKUP",
+        {
+          "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/rif_actionable_products.py",
+          "class" : "RifActionableProductsProcessor",
+          "configuration" : ""
+        }], 
+      "finally": [
+        "$FINALLY_MLE_ENCRYPT"
+  ]}, 
+  "rif_news_list" : {
+      "main": [
+        "$AUTH_MACRO",
+        "$UPDATE_SESSION_MACRO",
+        "$MLE_LOOKUP",
+        {
+          "path": "/home/ecosteer/NGI-TRUSTCHAIN/DOOF/provider/python/processor/rif_news_list.py",
+          "class" : "RifNewsListProcessor",
+          "configuration" : ""
+        }],
+      "finally": [
+       "$FINALLY_MLE_ENCRYPT"
+  ]}
+       
+  }
+}
