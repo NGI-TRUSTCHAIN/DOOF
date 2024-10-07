@@ -1,0 +1,30 @@
+cd ~/NGI-TRUSTCHAIN/DOOF/components/clients/python/conf 
+cp client_apis_conf.template client_apis.conf
+
+
+sed -i 's/BROKER_HOST/127.0.0.1/g' client_apis.conf && sed -i 's/BROKER_PORT/1883/g' client_apis.con
+sed -i 's/API_LOGIN\/login-handler/g'  client_apis.conf
+
+If Gateway is running as HTTP host, without certificates, behind NGINX: 
+sed -i 's/GATEWAY_HOST/127.0.0.1/g' client_apis.conf && sed -i 's/GATEWAY_PORT/80/g' client_apis.conf
+
+sed -i 's/SSL_VALUE/False/g' client_apis.conf
+OR 
+sed -i 's/SSL_VALUE/self_signed/g' client_apis.conf
+OR IF CERTIFICATE BY CERTIFICATE AUTHORITY IS USED  
+sed -i 's/SSL_VALUE/True/g' client_apis.conf
+
+Depending on the deployment, if NGINX   and authentication server is used: 
+
+
+sed -i 's/GATEWAY_API/\/dop\/imperatives/g'  client_apis.conf
+sed -i 's/API_SESSION/\/dop\/startsession/g'  client_apis.conf
+sed -i 's/API_ADMIN/\/dop\/sysadmin/g'  client_apis.conf
+
+If unauthenticated session is ok (the worker will still authenticate the presence of the account):
+sed -i 's/GATEWAY_API/\/imperatives/g' client_apis.conf 
+sed -i 's/API_SESSION/\/startsession/g'  client_apis.conf
+sed -i 's/API_ADMIN/\/sysadmin/g'  client_apis.conf
+
+
+
