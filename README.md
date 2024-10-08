@@ -24,14 +24,14 @@ This repository contains the DOOF components developed withing the NGI Trustchai
 
 ![DOOF architecture](./documentation/architecture_doof_github.jpg)
 
-The DOOF is a distributed platform based on an event-driven architecture. Its components (in green) and the third-party components (black) that are used for the communication between them are:
+DOOF is a distributed platform based on an event-driven architecture. Its components (in green) and the third-party components (black) that are used for the communication between them are:
 -	The DOOF Client: an HTTPS client application that consumes the services offered by DOOF back-end. It can be integrated into applications used by end-users.
 -	DOOF Gateway: an HTTPS Gateway which facilitates the integration and communication between clients (front-end) and worker (back-end), by exposing RESTful APIs.
 -	Work Queue: A third-party message queuing system that holds all the tasks to be processed by the first available Worker. The usage of a Work Queue allows the implementation of a competing consumers pattern, which delivers high availability and horizontal scalability as it allows to distribute the overall workload over a set of Worker Processes, local or remote. An example of a message queueing system that can be used is an AMQP broker such as RabbitMQ.
 -	DOOF Worker: this is the most important component within the DOOF, as it delivers the core functionality of orchestrating different services for achieving Data Ownership, including the connection with the Intermediation Platform, i.e. a blockchain such as Alastria. The DOOF Worker processes all the tasks (available from the Work Queue) that were fed by the DOOF Gateway, based on the requests from the DOOF Client.
 -	Broker: A third-party pub-sub broker that is used by the Worker to send asynchronous notifications to the DOOF Client. Typically, the asynchronous notifications originated by the Worker hold the results of the processing triggered by the requests sent by the DOOF Clients. A communication based on pub-sub broker is needed as the Intermediation Platform may expose non-deterministic latencies. A pub-sub broker may implement mqtt protocol, and be e.g. EMQX. The DOOF Client subscribes to a topic of this pub-sub broker which is specific for the client’s session, in order to receive the asynchronous notifications. The DOOF worker publishes notifications on the topic specific to the client’s session.
 -	Solidity Smart Contract: The smart contract on the intermediation platform has the responsibility to maintain the relationships between Data Owners and Data Users and the list of consents that the data owner has granted to data users. The intermediation platform can be implemented in several different ways, depending on the desired degree of decentralization. For instance, the intermediation platform can be based on DLT technologies (in particular: Alastria) or on more traditional technologies like RDBMS. In case of a blockchain platform is used, the relationships between Data Owners and Data Users are maintained thanks to a set of Smart Contracts developed by Ecosteer.
-- Database: A persistence layer used to keep an off-chain representation and additional details regarding the objects found in the smart contract, for user and session management, and for any other extension that may be required by a given use case.  
+-   Database: A persistence layer used to keep an off-chain representation and additional details regarding the objects found in the smart contract, for user and session management, and for any other extension that may be required by a given use case.  
 
 The providers (in blue) are pluggable modules that adhere to a common abstract interface and handle, e.g., the communication with the third party components such as the Work Queue and the pub/sub broker.
 
@@ -47,7 +47,18 @@ The repository structure is organized in such a way to map the folders to the di
 
 - components: contains the different components of the Data Ownership Orchestration Framework in specific subfolders: DOOF Clients, DOOF Gateway, DOOF worker, intermediation (smart contract)
 
+- conf: contains some configuration utils for the deployment of the software 
+
+- configuration_tool: contains a micropython web server deployed on the end-user's devices (data origins) to make the configuration of the connectivity and of other aspects of the data origin easier. 
+
+- documentation: it contains the architectural diagram of the system 
+
+- installation: it contains documents, scripts, and requirements regarding the installation procedure of DOOF components and their dependencies. 
+
+- pilot: this folder contains the source code of the front-end that was developed during the pilot for usage by the participants in the user-centric research phase of the project
+
 - provider: contains the different providers (modules) that can be loaded at run time by the different components. The input and output providers represented in the architecture schemas are found under the 'presentation' subfolder, the persistence provider that communicates with a database is found under the 'persistence' subfolder and the provider that communicates with the intermediation platform/smart contract is found under 'intermediation' subfolder. Moreover, the 'processors' subfolder contains the processors that populate the worker's pipeline and allow to deliver the business logic functionality of consent management and facilitation of deployment of Privacy Enhancing Technologies.
+ 
 
 The following sections will present each of the components into greater detail. 
 
@@ -85,3 +96,7 @@ The selected data origins are Smart Home devices for Air Quality monitoring, nam
 
 The data owner to which this product belongs can grant and revoke data visibility of third parties over this data stream at any time, for any reason. 
 
+The pilot was validated by the participants to the user-centric research, whose feedback was valuable into finding and implementing improvements in the user interface and functionality delivery. 
+
+# Installation and deployment 
+For the installation of the components and their dependencies please follow the steps documented in 1-DOOF_dependencies_and_third-party_installation and then in 2.DOOF-components-configuraiton under installation folder.
