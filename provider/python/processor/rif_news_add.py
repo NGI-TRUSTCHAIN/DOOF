@@ -78,6 +78,8 @@ class RifNewsAddProcessor(ProcessorProvider):
         
         # retrieve transaction from event payload
         blk_events = payload.get(self.EVENT_SET) # NOTE assume 1 event
+        if blk_events is None:
+            return DopError()
         transaction_id = payload.get(self.TRANSACTION_ID)
 
         to_proc = []
