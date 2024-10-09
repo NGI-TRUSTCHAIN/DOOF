@@ -15,7 +15,7 @@ DB_PASSWORD=$3
 #cd ~/installation/
 
 sudo -u ${DB_USER} psql -d ${DB_NAME} -f create_tables.sql
-
+sudo -u ${DB_USER} psql -d ${DB_NAME} -f create_rif_tables.sql
 #       in order to check if the db DB_NAME has been created
 #       and to check if the user DB_USER has been created too,
 #       use the following commands
