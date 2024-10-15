@@ -1,8 +1,12 @@
 #   SPDX-License-Identifier: Apache-2.0
 #   © Copyright Ecosteer 2024
-#   ver:     1.0
+#   ver:     1.2
 #   auth:    graz
-#   date:    26/06/2024
+#   date:    12/10/2024
+
+#   ver 1.2
+#   added configuration related to chain id and private key
+#   to better support private network Alastria (hyperledger BESU)
 
 from typing import Tuple, Optional, Union
 
@@ -53,6 +57,12 @@ class workerDoof(blockchainWorkerProvider):
         self.w3 = None
         self.contract = None            #   marketplace contract address
         self.gas = 8000000              #   default gas
+        #   properties for transaction signature using private key
+        use_pk      = False
+        signer_pk   = None  #   the private key (from the configuration file)
+        signer      = None  #   the account (from the private key) that will sign transaction
+        chainId     = None  #   the chain id
+
 
         super().__init__()
 
@@ -105,6 +115,21 @@ class workerDoof(blockchainWorkerProvider):
             self.gas = int(g)
 
         self.owner_address = self.config.get('owner_address')
+
+
+        #   chainID (could be useful for private networks)
+        self.chainId = (self.config.get('chainId'))
+        if self.chainId != None:
+            self.chainId = int(self.chainId)
+
+        #   configuration for signed transactions
+        self.use_pk = (self.config.get('use_pk') == 'True')
+        if self.use_pk == True:
+            #   get the other parameters that are necessary for the pk signature
+            self.signer_pk = self.config.get('signer_pk')
+            if self.signer_pk == None:
+                return DopError(102,"EThereum provider configuration error; missing parameter owner_pk.")
+
         if not Web3.isChecksumAddress(self.owner_address):
             self.owner_address = Web3.toChecksumAddress(self.owner_address)
         self.owner_password = self.config.get('owner_password')
@@ -123,12 +148,17 @@ class workerDoof(blockchainWorkerProvider):
         if not is_connected:
             return DopError(104, "Blockchain connection error.")
     
-        #   everything good
+        #   everything goo
         #   load the contract, the same contract instance will be
         #   used for any call
         err = self._get_doof()
         if err.isError():
             print('cannot load the DOOF smart contract')
+
+        #   private key signature conf
+        if self.use_pk == True:
+            #   initialize the account
+            self.signer = self.w3.eth.account.privateKeyToAccount(self.signer_pk)
 
 
         #   check if everything is allright
@@ -220,7 +250,45 @@ class workerDoof(blockchainWorkerProvider):
         address = '0x' + res[1].hex()
         return (err,address)
     
-    
+
+    def _pk_transaction(self) -> dict:
+        t_properties = {}
+        t_properties['nonce']   = self.w3.eth.getTransactionCount(self.signer.address)
+        t_properties['from']    = self.signer.address
+        t_properties['gas']     = self.w3.eth.getBlock('latest').gasLimit
+        if self.chainId != None:
+            t_properties['chainId'] = self.chainId
+
+        return t_properties
+
+
+
+    def _memberCreatePk(self
+        ,   a_address:      str     #   application layer address
+        ,   a_secret:       str     #   primary secret
+        ,   a_proxy_secret: str     #   proxy secret
+        ) -> Tuple[DopError, str]:
+
+
+        if not self.canCall():
+            return (DopError(ERR_CANT_CALL),'')
+
+
+        #   self.use_pk     is True
+        #   self.signer     is the account that has been found using self.w3.eth.account.privateKeyToAccount
+
+        try:
+            t_properties = self._pk_transaction()
+            transaction = self.contract.functions.memberCreate(a_address, a_secret, a_proxy_secret).buildTransaction(t_properties)
+           
+            signed_transaction = self.w3.eth.account.signTransaction(transaction, self.signer.privateKey)
+            tx_hash = self.w3.eth.sendRawTransaction(signed_transaction.rawTransaction)
+            
+        except Exception as e:
+            return (DopError(ERR_TRANS_EXC),e.__str__())
+        return (DopError(),tx_hash.hex())
+
+
     def memberCreate(self
         ,   a_address:      str     #   application layer address
         ,   a_secret:       str     #   primary secret
@@ -228,6 +296,9 @@ class workerDoof(blockchainWorkerProvider):
         ) -> Tuple[DopError, str]:
         if not self.canCall():
             return (DopError(ERR_CANT_CALL),'')
+        
+        if self.use_pk:
+            return self._memberCreatePk(a_address, a_secret, a_proxy_secret)
         
         try:
             transaction = self._generate_transaction(_from=self.owner_address,
@@ -360,6 +431,30 @@ class workerDoof(blockchainWorkerProvider):
 
         return (DopError(),ret)
 
+    def _productUpdatePk(self
+        ,   mkt_product_addr: str       #   intermediation layer product address
+        ,   slot_selector: int          #   select the slot to get SLOT_GLOBAL(0), SLOT_VAULT(1), SLOT_PROXY(2), SLOT_URL(3)
+        ,   owner_proxy_secret: str     #   product's owner proxy secret
+        ,   new_data: str               #   data to be propagated to the slot
+        ) -> Tuple[DopError, str]:
+        if not self.canCall():
+            return (DopError(ERR_CANT_CALL),'')
+        
+        try:
+            t_properties = self._pk_transaction()
+            transaction = self.contract.functions.productUpdate(
+                mkt_product_addr
+            ,   slot_selector
+            ,   owner_proxy_secret
+            ,   new_data).buildTransaction(t_properties)
+           
+            signed_transaction = self.w3.eth.account.signTransaction(transaction, self.signer.privateKey)
+            tx_hash = self.w3.eth.sendRawTransaction(signed_transaction.rawTransaction)
+
+        except Exception:
+            return (DopError(ERR_TRANS_EXC),'')
+        return (DopError(),tx_hash.hex())
+
 
     def productUpdate(self
         ,   mkt_product_addr: str       #   intermediation layer product address
@@ -369,6 +464,9 @@ class workerDoof(blockchainWorkerProvider):
         ) -> Tuple[DopError, str]:
         if not self.canCall():
             return (DopError(ERR_CANT_CALL),'')
+        
+        if self.use_pk==True:
+            return self._productUpdatePk(mkt_product_addr, slot_selector, owner_proxy_secret, new_data)
         
         try:
             transaction = self._generate_transaction(_from=self.owner_address,
@@ -385,6 +483,37 @@ class workerDoof(blockchainWorkerProvider):
         return (DopError(),tx_hash)
 
 
+    def _productCreatePk(self
+        ,   a_address:      str     #   application layer address (for the new product)
+        ,   mkt_owner_addr: str     #   intermediation layer address of the product's owner
+        ,   mkt_payee_addr: str     #   intermediation layer address of the product's payee
+        ,   a_proxy_secret: str     #   proxy secret of the product's owner
+        ,   price: int
+        ,   period: int
+        ) -> Tuple[DopError, str]:
+        if not self.canCall():
+            return (DopError(ERR_CANT_CALL),'')
+        
+        try:
+            t_properties = self._pk_transaction()
+
+            transaction = self.contract.functions.productCreate(
+                a_address
+            ,   mkt_owner_addr
+            ,   mkt_payee_addr
+            ,   a_proxy_secret
+            ,   price
+            ,   period).buildTransaction(t_properties)
+
+            signed_transaction = self.w3.eth.account.signTransaction(transaction, self.signer.privateKey)
+            tx_hash = self.w3.eth.sendRawTransaction(signed_transaction.rawTransaction)
+
+            tx_hash = tx_hash.hex()
+
+        except Exception as e:
+            return (DopError(ERR_TRANS_EXC),e.__str__())
+        return (DopError(),tx_hash)
+
 
     def productCreate(self
         ,   a_address:      str     #   application layer address (for the new product)
@@ -396,6 +525,9 @@ class workerDoof(blockchainWorkerProvider):
         ) -> Tuple[DopError, str]:
         if not self.canCall():
             return (DopError(ERR_CANT_CALL),'')
+        
+        if self.use_pk:
+            return self._productCreatePk(a_address, mkt_owner_addr, mkt_payee_addr, a_proxy_secret, price, period)
         
         try:
             transaction = self._generate_transaction(_from=self.owner_address,
@@ -447,6 +579,34 @@ class workerDoof(blockchainWorkerProvider):
     #   subscriptions
     #=======================================================================================
 
+    def _subscriptionCreatePk(self
+        ,   a_address:      str     #   application layer address (for the new subscription)
+        ,   mkt_product_addr: str   #   intermediation layer address of the product (referenced by the subscription)
+        ,   mkt_sub_addr: str       #   intermediation layer address of the subscriber
+        ,   sub_proxy_secret: str   #   proxy secret of the subscriber
+        ) -> Tuple[DopError, str]:
+        if not self.canCall():
+            return (DopError(ERR_CANT_CALL),'')
+        
+        try:
+            t_properties = self._pk_transaction()
+            transaction = self.contract.functions.subscriptionCreate(
+                a_address
+            ,   mkt_product_addr
+            ,   mkt_sub_addr
+            ,   sub_proxy_secret
+            ).buildTransaction(t_properties)
+
+            signed_transaction = self.w3.eth.account.signTransaction(transaction, self.signer.privateKey)
+            tx_hash = self.w3.eth.sendRawTransaction(signed_transaction.rawTransaction)
+
+            tx_hash = tx_hash.hex()
+
+        except Exception as e:
+            return (DopError(ERR_TRANS_EXC),e.__str__())
+        return (DopError(),tx_hash)
+
+
     def subscriptionCreate(self
         ,   a_address:      str     #   application layer address (for the new subscription)
         ,   mkt_product_addr: str   #   intermediation layer address of the product (referenced by the subscription)
@@ -455,6 +615,9 @@ class workerDoof(blockchainWorkerProvider):
         ) -> Tuple[DopError, str]:
         if not self.canCall():
             return (DopError(ERR_CANT_CALL),'')
+        
+        if self.use_pk==True:
+            return self._subscriptionCreatePk(a_address, mkt_product_addr, mkt_sub_addr, sub_proxy_secret)
         
         try:
             transaction = self._generate_transaction(_from=self.owner_address,
@@ -471,6 +634,33 @@ class workerDoof(blockchainWorkerProvider):
             return (DopError(ERR_TRANS_EXC),'')
         return (DopError(),tx_hash)
 
+    def _subscriptionDeletePk(self
+        ,   mkt_subscription_addr:      str     #   blk address (for the subscription)
+        ,   mkt_product_addr: str   #   intermediation layer address of the product (referenced by the subscription)
+        ,   mkt_sub_addr: str       #   intermediation layer address of the subscriber
+        ,   sub_proxy_secret: str   #   proxy secret of the subscriber
+        ) -> Tuple[DopError, str]:
+        if not self.canCall():
+            return (DopError(ERR_CANT_CALL),'')
+        
+        try:
+            t_properties = self._pk_transaction()
+            transaction = self.contract.functions.subscriptionDelete(
+                mkt_subscription_addr
+            ,   mkt_product_addr
+            ,   mkt_sub_addr
+            ,   sub_proxy_secret
+            ).buildTransaction(t_properties)
+
+            signed_transaction = self.w3.eth.account.signTransaction(transaction, self.signer.privateKey)
+            tx_hash = self.w3.eth.sendRawTransaction(signed_transaction.rawTransaction)
+
+            tx_hash = tx_hash.hex()
+
+        except Exception as e:
+            return (DopError(ERR_TRANS_EXC),e.__str__())
+        return (DopError(),tx_hash)
+
 
     def subscriptionDelete(self
         ,   mkt_subscription_addr: str  #   application layer subscription address
@@ -481,6 +671,11 @@ class workerDoof(blockchainWorkerProvider):
         if not self.canCall():
             return (DopError(ERR_CANT_CALL),'')
         
+        
+        if self.use_pk==True:
+            return self._subscriptionDeletePk(mkt_subscription_addr, mkt_product_addr, mkt_sub_addr, sub_proxy_secret)
+        
+
         try:
             transaction = self._generate_transaction(_from=self.owner_address,
                                                      password=self.owner_password,
@@ -557,6 +752,26 @@ class workerDoof(blockchainWorkerProvider):
         return (DopError(),ret)
 
 
+    def _subscriptionGrantPk(self
+        ,   mkt_subscription_addr: str       #   intermediation layer product address
+        ,   owner_proxy_secret: str     #   product's owner proxy secret
+        ) -> Tuple[DopError, str]:
+        if not self.canCall():
+            return (DopError(ERR_CANT_CALL),'')
+        
+        try:
+            t_properties = self._pk_transaction()
+            transaction = self.contract.functions.subscriptionGrant(
+                mkt_subscription_addr
+            ,   owner_proxy_secret
+            ).buildTransaction(t_properties)
+           
+            signed_transaction = self.w3.eth.account.signTransaction(transaction, self.signer.privateKey)
+            tx_hash = self.w3.eth.sendRawTransaction(signed_transaction.rawTransaction)
+            
+        except Exception as e:
+            return (DopError(ERR_TRANS_EXC),e.__str__())
+        return (DopError(),tx_hash.hex())
 
     def subscriptionGrant(self
         ,   mkt_subscription_addr: str       #   intermediation layer product address
@@ -564,6 +779,9 @@ class workerDoof(blockchainWorkerProvider):
         ) -> Tuple[DopError, str]:
         if not self.canCall():
             return (DopError(ERR_CANT_CALL),'')
+        
+        if self.use_pk==True:
+            return self._subscriptionGrantPk(mkt_subscription_addr, owner_proxy_secret)
         
         try:
             transaction = self._generate_transaction(_from=self.owner_address,
@@ -579,12 +797,37 @@ class workerDoof(blockchainWorkerProvider):
         return (DopError(),tx_hash)
 
 
+    def _subscriptionRevokePk(self
+        ,   mkt_subscription_addr: str       #   intermediation layer product address
+        ,   owner_proxy_secret: str     #   product's owner proxy secret
+        ) -> Tuple[DopError, str]:
+        if not self.canCall():
+            return (DopError(ERR_CANT_CALL),'')
+        
+        try:
+
+            t_properties = self._pk_transaction()
+            transaction = self.contract.functions.subscriptionRevoke(
+                mkt_subscription_addr
+            ,   owner_proxy_secret
+            ).buildTransaction(t_properties)
+           
+            signed_transaction = self.w3.eth.account.signTransaction(transaction, self.signer.privateKey)
+            tx_hash = self.w3.eth.sendRawTransaction(signed_transaction.rawTransaction)
+
+        except Exception as e:
+            return (DopError(ERR_TRANS_EXC),e.__str__())
+        return (DopError(),tx_hash.hex())
+
     def subscriptionRevoke(self
         ,   mkt_subscription_addr: str       #   intermediation layer product address
         ,   owner_proxy_secret: str     #   product's owner proxy secret
         ) -> Tuple[DopError, str]:
         if not self.canCall():
             return (DopError(ERR_CANT_CALL),'')
+        
+        if self.use_pk == True:
+            return self._subscriptionRevokePk(mkt_subscription_addr, owner_proxy_secret)
         
         try:
             transaction = self._generate_transaction(_from=self.owner_address,
@@ -619,8 +862,7 @@ class workerDoof(blockchainWorkerProvider):
         else:
             raise NameError
     
-
-
+    
     def _get_doof(self) -> DopError:
         #   load the doof smart contract
         try:
@@ -660,7 +902,6 @@ class workerDoof(blockchainWorkerProvider):
     def _lock(self, account):
         self.w3.personal.lockAccount(account)
 
-    
     def _generate_transaction(self,
             unlock=False,
             password=None,
